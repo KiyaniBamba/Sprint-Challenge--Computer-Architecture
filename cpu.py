@@ -37,3 +37,63 @@ class CPU:
         self.branch_table[JNE] = self.jne
         self.branch_table[JEQ] = self.jeq
         self.branch_table[CMP] = self.cmp_fun
+
+def load(self, filename):
+        """Load a program into memory."""
+
+        address = 0
+
+        # For now, we've just hardcoded a program:
+
+        program = []
+
+        try:
+            address = 0
+            with open(filename) as f:
+                for line in f:
+                    comment_split = line.split("#")
+                    num = comment_split[0].strip()
+
+                    # Check if the current line is a blank line
+                    if num == "":
+                        continue
+
+                    value = int(num, 2)
+
+                    program.append(value)
+
+        except FileNotFoundError:
+            print(f"{sys.argv[0]}: {filename} Not Found")
+            sys.exit(1)
+
+        for instruction in program:
+            self.ram[address] = instruction
+            address += 1
+
+    # ALU to perform arithmatic operations and also CMP operations
+    def alu(self, op, reg_a, reg_b):
+        """ALU operations."""
+
+        # vars to be used for flagging
+        a = self.registers[reg_a]
+        b = self.registers[reg_b]
+
+        if op == "ADD":
+            self.registers[reg_a] += self.registers[reg_b]
+        elif op == "MUL":
+            self.registers[reg_a] *= self.registers[reg_b]
+        elif op == "CMP":
+            if a == b:
+                self.flags['E'] = 1
+            else:
+                self.flags['E'] = 0
+            if a < b:
+                self.flags['L'] = 1
+            else:
+                self.flags['L'] = 0
+            if a > b:
+                self.flags['G'] = 1
+            else:
+                self.flags['G'] = 0
+        else:
+            raise Exception("Unsupported ALU operation") 
