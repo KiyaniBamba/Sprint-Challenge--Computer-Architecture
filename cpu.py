@@ -97,3 +97,24 @@ def load(self, filename):
                 self.flags['G'] = 0
         else:
             raise Exception("Unsupported ALU operation") 
+
+    def ram_read(self, MAR):
+        return self.ram[MAR]
+
+    def write_ram(self, MAR, MDR):
+        self.ram[MAR] = MDR
+
+    def jeq(self, a=None):
+        if self.flags['E'] == 1:
+            self.pc = self.registers[a]
+        else:
+            self.pc += 2
+
+    def jmp(self, a=None):
+        self.pc = self.registers[a]
+
+    def jne(self, a=None):
+        if self.flags['E'] == 0:
+            self.pc = self.registers[a]
+        else:
+            self.pc += 2
