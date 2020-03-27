@@ -98,22 +98,22 @@ def load(self, filename):
         else:
             raise Exception("Unsupported ALU operation") 
 
-    def ram_read(self, MAR):
+    def read_ram(self, MAR):
         return self.ram[MAR]
 
     def write_ram(self, MAR, MDR):
         self.ram[MAR] = MDR
 
-    def jeq(self, a=None):
+    def jeq(self, a=None, b=None):
         if self.flags['E'] == 1:
             self.pc = self.registers[a]
         else:
             self.pc += 2
 
-    def jmp(self, a=None):
+    def jmp(self, a=None, b=None):
         self.pc = self.registers[a]
 
-    def jne(self, a=None):
+    def jne(self, a=None, b=None):
         if self.flags['E'] == 0:
             self.pc = self.registers[a]
         else:
@@ -125,7 +125,7 @@ def load(self, filename):
     def ldi(self, a=None, b=None):
         self.registers[a] = b
 
-    def prn(self, a=None):
+    def prn(self, a=None, b=None):
         print(self.registers[a])
 
     def add(self, a=None, b=None):
@@ -134,3 +134,49 @@ def load(self, filename):
     def mul(self, a=None, b=None):
         self.alu("MUL", a, b) 
 
+    def push(self, a=None):
+        self.registers[self.sp] -= 1
+        val = self.registers[a]
+        self.write_ram(self.registers[self.sp], val)
+
+    def pop(self, a=None):
+        val = self.read_ram(self.registers[self.sp])
+        self.registers[a] = val
+        self.registers[self.sp] += 1
+
+    def call(self, b=None):
+        val = self.pc + 2
+        self.registers[self.sp] -= 1
+        self.write_ram(self.registers[self.sp], val)
+        reg = self.read_ram(self.pc + 1)
+        addr = self.registers[reg]
+        self.pc = addr
+
+    def ret(self):
+        ret_addr = self.registers[self.sp]
+        self.pc = self.read_ram(ret_addr)
+        self.registers[self.sp] += 1 
+    
+    def run(self):
+        """Run The CPU"""
+
+        # used to break out of the running state
+        run = True
+
+        # a dict to check for jump instructions
+        jump = [CALL, JNE, RET, JMP, JEQ]
+
+        while run:
+            IR = self.read_ram(self.pc)
+            operand_a = self.read_ram(self.pc + 1)
+            operand_b = self.read_ram(self.pc + 2)
+            if IR == HLT:
+                print("Exiting program...")
+                run = False
+            elif IR in jump:
+                self.branch_table[IR](operand_a, operand_b)
+            elif IR in self.branch_table:
+                self.branch_table[IR](operand_a, operand_b)
+                self.pc += (IR >> 6) + 1
+            else:
+                print(IR)
