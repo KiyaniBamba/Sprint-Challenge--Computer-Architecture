@@ -15,6 +15,7 @@ JEQ = 0b01010101
 CALL = 0b01010000
 PUSH = 0b01000101
 
+
 class CPU:
     def __init__(self):
         """Construct A New CPU"""
@@ -38,7 +39,8 @@ class CPU:
         # self.branch_table[JEQ] = self.jeq
         # self.branch_table[CMP] = self.cmp_fun
 
-def load(self, filename):
+
+    def load(self, filename):
         """Load a program into memory."""
 
         address = 0
@@ -70,11 +72,8 @@ def load(self, filename):
             self.ram[address] = instruction
             address += 1
 
-    # ALU to perform arithmatic operations and also CMP operations
     def alu(self, op, reg_a, reg_b):
-        """ALU operations."""
-
-        # vars to be used for flagging
+        #flagging
         a = self.registers[reg_a]
         b = self.registers[reg_b]
 
@@ -180,3 +179,6 @@ def load(self, filename):
                 self.pc += (IR >> 6) + 1
             else:
                 print(IR)
+
+
+   
