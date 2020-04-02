@@ -41,7 +41,7 @@ Options for submission, whichever is easier for you:
 * Copy your source into this repo, or...
 
 * Submit a PR for the Sprint Challenge from the `Computer-Architecture` repo
-  you've been using all along.
+  you've been using all along. ok
 
 ## Minimum Viable Product
 
