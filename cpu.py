@@ -1,5 +1,6 @@
 import sys
 
+
 HLT = 0b00000001
 LDI = 0b10000010
 PRN = 0b01000111
@@ -11,41 +12,46 @@ CMP = 0b10100111
 JMP = 0b01010100
 JNE = 0b01010110
 JEQ = 0b01010101
-
+PRA = 0b01001000
 CALL = 0b01010000
 PUSH = 0b01000101
 
 
 class CPU:
     def __init__(self):
-        """Construct A New CPU"""
+        """Construct CPU"""
+        # registers
         self.registers = [0] * 8
+        #  RAM
         self.ram = [0] * 256
+        #  Program Counter (PC)
         self.pc = 0
+        # Stack Pointer (SP) 
         self.sp = 7
         self.registers[7] = 0xF4
         self.flags = {}
+        
+        #  branch table
         self.branch_table = {}
-        self.branch_table[ADD] = self.add
+        self.branch_table[JEQ] = self.jeq
+        self.branch_table[JMP] = self.jmp
+        self.branch_table[JNE] = self.jne
+        self.branch_table[CMP] = self.cmp_func
         self.branch_table[LDI] = self.ldi
         self.branch_table[PRN] = self.prn
+        self.branch_table[ADD] = self.add
         self.branch_table[MUL] = self.mul
         self.branch_table[PUSH] = self.push
         self.branch_table[POP] = self.pop
         self.branch_table[CALL] = self.call
         self.branch_table[RET] = self.ret
-        # self.branch_table[JMP] = self.jmp
-        # self.branch_table[JNE] = self.jne
-        # self.branch_table[JEQ] = self.jeq
-        # self.branch_table[CMP] = self.cmp_fun
-
+        self.branch_table[PRA] = self.pra
 
     def load(self, filename):
         """Load a program into memory."""
 
         address = 0
 
-        # For now, we've just hardcoded a program:
 
         program = []
 
@@ -56,7 +62,6 @@ class CPU:
                     comment_split = line.split("#")
                     num = comment_split[0].strip()
 
-                    # Check if the current line is a blank line
                     if num == "":
                         continue
 
@@ -71,9 +76,11 @@ class CPU:
         for instruction in program:
             self.ram[address] = instruction
             address += 1
-
+            
     def alu(self, op, reg_a, reg_b):
-        #flagging
+        """ALU operations."""
+
+        # flagging
         a = self.registers[reg_a]
         b = self.registers[reg_b]
 
@@ -95,7 +102,7 @@ class CPU:
             else:
                 self.flags['G'] = 0
         else:
-            raise Exception("Unsupported ALU operation") 
+            raise Exception("Unsupported ALU operation")
 
     def read_ram(self, MAR):
         return self.ram[MAR]
@@ -127,13 +134,16 @@ class CPU:
     def prn(self, a=None, b=None):
         print(self.registers[a])
 
+    def pra(self, a=None, b=None):
+        print(chr(self.registers[a]))
+
     def add(self, a=None, b=None):
         self.alu("ADD", a, b)
 
     def mul(self, a=None, b=None):
-        self.alu("MUL", a, b) 
+        self.alu("MUL", a, b)
 
-    def push(self, a=None):
+    def push(self, a=None, b=None):
         self.registers[self.sp] -= 1
         val = self.registers[a]
         self.write_ram(self.registers[self.sp], val)
@@ -154,24 +164,20 @@ class CPU:
     def ret(self):
         ret_addr = self.registers[self.sp]
         self.pc = self.read_ram(ret_addr)
-        self.registers[self.sp] += 1 
-    
+        self.registers[self.sp] += 1
+
     def run(self):
         """Run The CPU"""
 
-        # used to break out of the running state
-        run = True
-
-        # a dict to check for jump instructions
+        # more instructions
         jump = [CALL, JNE, RET, JMP, JEQ]
 
-        while run:
+        while True:
             IR = self.read_ram(self.pc)
             operand_a = self.read_ram(self.pc + 1)
             operand_b = self.read_ram(self.pc + 2)
             if IR == HLT:
-                print("Exiting program...")
-                run = False
+                sys.exit(1)
             elif IR in jump:
                 self.branch_table[IR](operand_a, operand_b)
             elif IR in self.branch_table:
@@ -179,6 +185,4 @@ class CPU:
                 self.pc += (IR >> 6) + 1
             else:
                 print(IR)
-
-
    
